@@ -6,44 +6,32 @@ require('dotenv').config();
 
 const app = express();
 
-// Enhanced CORS configuration
+// Dynamic CORS configuration
 const allowedOrigins = [
+  process.env.CLIENT_URL,
   'http://localhost:5173',
-  
-  'https://week-5-web-sockets-assignment-felix-*.vercel.app', // For preview deployments
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin is in the allowed list or matches the wildcard pattern
-    if (
-      allowedOrigins.includes(origin) ||
-      allowedOrigins.some(allowed => {
-        if (allowed.includes('*')) {
-          const regex = new RegExp(allowed.replace('*', '.*'));
-          return regex.test(origin);
-        }
-        return false;
-      })
-    ) {
+    if (!origin) return callback(null, true); // Allow curl/mobile/no-origin
+
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    
+
     console.warn('⚠️ Blocked by CORS:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  exposedHeaders: ['set-cookie'], // Important for cookies
+  exposedHeaders: ['set-cookie'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 };
 
 app.use(cors(corsOptions));
 
-// Enhanced request logging
+// Request logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
   next();
@@ -51,14 +39,14 @@ app.use((req, res, next) => {
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form data
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Rate limiting (important for auth endpoints)
+// Rate limiter for auth routes
 const rateLimit = require('express-rate-limit');
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 app.use('/api/auth', authLimiter);
 
@@ -66,30 +54,30 @@ app.use('/api/auth', authLimiter);
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
-// MongoDB connection with better error handling
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  serverSelectionTimeoutMS: 5000,
   retryWrites: true,
   w: 'majority'
 })
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => {
   console.error('❌ MongoDB connection error:', err);
-  process.exit(1); // Exit if DB connection fails
+  process.exit(1);
 });
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'OK',
     dbState: mongoose.connection.readyState,
     timestamp: new Date()
   });
 });
 
-// Root route
+// Root
 app.get('/', (req, res) => {
   res.json({
     message: 'Chat API Server',
@@ -98,25 +86,24 @@ app.get('/', (req, res) => {
   });
 });
 
-// Enhanced error handler
+// Error handler
 app.use((err, req, res, next) => {
   console.error(`[ERROR] ${err.stack}`);
-  
-  // Handle CORS errors specifically
+
   if (err.message.includes('CORS')) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       error: 'Forbidden',
-      message: err.message 
+      message: err.message
     });
   }
-  
-  res.status(500).json({ 
+
+  res.status(500).json({
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
   });
 });
 
-// Handle 404s
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
