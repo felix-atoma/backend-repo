@@ -1,5 +1,4 @@
-import React from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,17 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Configure axios to send cookies with requests
+  // ✅ Configure axios globally
   axios.defaults.withCredentials = true;
+  axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
 
   const login = async (username, password) => {
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/login`, 
-        { username, password }
-      );
+      const { data } = await axios.post('/api/auth/login', { username, password });
       setUser(data.user);
-      navigate('chat');
+      navigate('/chat');
     } catch (error) {
       throw error.response?.data?.error || 'Login failed';
     }
@@ -28,10 +25,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password) => {
     try {
-      await axios.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/register`, 
-        { username, password }
-      );
+      await axios.post('/api/auth/register', { username, password });
       await login(username, password);
     } catch (error) {
       throw error.response?.data?.error || 'Registration failed';
@@ -40,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`);
+      await axios.post('/api/auth/logout');
       setUser(null);
       navigate('/login');
     } catch (error) {
@@ -50,9 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const { data } = await axios.get(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/check`
-      );
+      const { data } = await axios.get('/api/auth/check');
       setUser(data.user);
     } catch (error) {
       setUser(null);

@@ -1,5 +1,4 @@
-import React from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
 const SocketContext = createContext();
@@ -9,7 +8,13 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:5000', {
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+
+    if (!serverUrl) {
+      console.warn('⚠️ VITE_SERVER_URL is not set! Falling back to localhost:5000 (for dev only).');
+    }
+
+    const newSocket = io(serverUrl || 'http://localhost:5000', {
       withCredentials: true,
       autoConnect: true,
       reconnectionAttempts: 5,
