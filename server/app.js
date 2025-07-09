@@ -8,11 +8,30 @@ require('dotenv').config(); // ✅ Load .env only once, and at the top
 
 const app = express();
 
-// ✅ Middleware
+// ✅ Allow both local and Vercel frontends
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://week-5-web-sockets-assignment-felix.vercel.app',
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('❌ Not allowed by CORS: ' + origin));
+    }
+  },
+  credentials: true,
 }));
+
+// 🛠 Optional: Log request origins (useful for debugging)
+app.use((req, res, next) => {
+  console.log('Request Origin:', req.headers.origin);
+  next();
+});
+
+// ✅ Middleware
 app.use(express.json());
 app.use(cookieParser());
 
