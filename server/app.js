@@ -6,10 +6,11 @@ require('dotenv').config();
 
 const app = express();
 
-// Dynamic CORS configuration
+// ✅ Updated allowed origins
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
+  'https://chat-frontend-gray-nu.vercel.app', // 🔥 Your deployed frontend
 ];
 
 const corsOptions = {
