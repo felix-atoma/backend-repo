@@ -76,3 +76,7 @@ Your work will be automatically submitted when you push to your GitHub Classroom
 - [React Documentation](https://react.dev/)
 - [Express.js Documentation](https://expressjs.com/)
 - [Building a Chat Application with Socket.io](https://socket.io/get-started/chat) 
+
+https://chat-frontend-gray-nu.vercel.app/
+
+VITE_SERVER_URL=https://backend-repo-15go.onrender.com

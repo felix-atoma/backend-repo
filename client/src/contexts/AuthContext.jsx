@@ -9,9 +9,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ✅ Configure axios globally
-  axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
+  // ✅ Set Axios base URL and credentials globally
+  useEffect(() => {
+    axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
+    axios.defaults.withCredentials = true;
+  }, []);
 
   const login = async (username, password) => {
     try {
@@ -19,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       navigate('/chat');
     } catch (error) {
-      throw error.response?.data?.error || 'Login failed';
+      throw error?.response?.data?.error || 'Login failed';
     }
   };
 
@@ -28,7 +30,7 @@ export const AuthProvider = ({ children }) => {
       await axios.post('/api/auth/register', { username, password });
       await login(username, password);
     } catch (error) {
-      throw error.response?.data?.error || 'Registration failed';
+      throw error?.response?.data?.error || 'Registration failed';
     }
   };
 

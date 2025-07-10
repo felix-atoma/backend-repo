@@ -202,4 +202,20 @@ module.exports = (io) => {
       console.error(`❌ Socket error (${socket.id}):`, error.message);
     });
   });
+  // Add to your existing socket.io connection handler
+socket.on('react_to_message', ({ messageId, reaction }) => {
+  const message = messages.find(m => m.id === messageId);
+  if (message) {
+    message.reactions = message.reactions || {};
+    message.reactions[reaction] = (message.reactions[reaction] || 0) + 1;
+    io.emit('message_reacted', { messageId, reactions: message.reactions });
+  }
+});
+
+// Add this event listener to your client components
+socket.on('message_reacted', ({ messageId, reactions }) => {
+  setMessages(prev => prev.map(msg => 
+    msg.id === messageId ? { ...msg, reactions } : msg
+  ));
+});
 };

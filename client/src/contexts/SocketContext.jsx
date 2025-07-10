@@ -8,32 +8,21 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
-    if (!serverUrl) {
-      console.warn('⚠️ VITE_SERVER_URL is not set! Falling back to localhost:5000 (for dev only).');
-    }
-
-    const newSocket = io(serverUrl || 'http://localhost:5000', {
+    const newSocket = io(serverUrl, {
       withCredentials: true,
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     });
 
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      setIsConnected(false);
-    });
+    newSocket.on('connect', () => setIsConnected(true));
+    newSocket.on('disconnect', () => setIsConnected(false));
 
     setSocket(newSocket);
 
     return () => {
-      newSocket.off('connect');
-      newSocket.off('disconnect');
       newSocket.disconnect();
     };
   }, []);
